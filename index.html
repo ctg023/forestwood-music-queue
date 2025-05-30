@@ -1,0 +1,2755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Queue Manager</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .tabs {
+            display: flex;
+            background: #f8f9ff;
+            border-bottom: 1px solid #e0e6ed;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+        
+        .tab.active {
+            background: white;
+            color: #4facfe;
+            border-bottom: 3px solid #4facfe;
+        }
+        .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        max-width: 400px;
+    }
+
+        .notification-content {
+        background: #4CAF50;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+        .notification.error .notification-content {
+        background: #f44336;
+    }
+
+        .notification.warning .notification-content {
+        background: #ff9800;
+    }
+
+        .notification-close {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 20px;
+        cursor: pointer;
+        margin-left: 15px;
+        padding: 0;
+    }
+        .tab:hover:not(.active) {
+            background: #f0f4ff;
+            color: #333;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input[type="text"],
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e6ed;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .form-group input[type="text"]:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+        
+        .form-group input[type="file"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e6ed;
+            border-radius: 12px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input[type="file"]:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn.secondary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .btn.danger {
+            background: linear-gradient(135deg, #ff4757 0%, #ff3742 100%);
+        }
+        
+        .user-list {
+            background: #f8f9ff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .user-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 2px solid #e0e6ed;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .user-info h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .user-info p {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .user-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 14px;
+            width: auto;
+        }
+        
+        .queue-section {
+            background: #f8f9ff;
+            border-top: 1px solid #e0e6ed;
+        }
+        
+        .queue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .queue-header h2 {
+            font-size: 1.8em;
+            color: #333;
+        }
+        
+        .queue-count {
+            background: #4facfe;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        
+        .queue-list {
+            list-style: none;
+        }
+        
+        .queue-item {
+            background: white;
+            border: 2px solid #e0e6ed;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .queue-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .queue-item.lesson-priority {
+            border-color: #ff6b6b;
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%);
+        }
+        
+        .queue-item.lesson-priority::before {
+            content: "LESSON";
+            position: absolute;
+            top: -8px;
+            left: 20px;
+            background: #ff6b6b;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        
+        .queue-item.bumped {
+            border-color: #ffa500;
+            background: linear-gradient(135deg, #fff8f0 0%, #ffebcc 100%);
+        }
+        
+        .queue-item-info {
+            flex: 1;
+        }
+        
+        .queue-item-name {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .queue-item-details {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .bump-count {
+            background: #ffa500;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        
+        .queue-item-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .play-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .play-btn:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+        
+        .remove-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .remove-btn:hover {
+            background: #ff3742;
+            transform: scale(1.05);
+        }
+        
+        .empty-queue {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        .modal h3 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.5em;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .modal-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-btn.yes {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .modal-btn.no {
+            background: #ff4757;
+            color: white;
+        }
+        
+        .modal-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .timer-section {
+            background: #f8f9ff;
+            padding: 20px;
+            border-top: 1px solid #e0e6ed;
+        }
+        
+        .timer-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .timer-header h3 {
+            color: #333;
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+        
+        .timer-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .timer-item {
+            background: white;
+            border: 2px solid #e0e6ed;
+            border-radius: 12px;
+            padding: 15px;
+            min-width: 180px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .timer-item.warning {
+            border-color: #ffa500;
+            background: linear-gradient(135deg, #fff8f0 0%, #ffebcc 100%);
+        }
+        
+        .timer-item.expired {
+            border-color: #ff4757;
+            background: linear-gradient(135deg, #fff0f0 0%, #ffe0e0 100%);
+        }
+        
+        .timer-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        
+        .timer-display {
+            font-family: 'Courier New', monospace;
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .timer-display.normal {
+            color: #4CAF50;
+        }
+        
+        .timer-display.warning {
+            color: #ffa500;
+        }
+        
+        .timer-display.expired {
+            color: #ff4757;
+        }
+        
+        .timer-status {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .timer-unlock {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        /* Fix for modal blocking input focus */
+        .modal {
+            pointer-events: auto !important;
+        }
+
+        .modal-content {
+            pointer-events: auto !important;
+        }
+
+        /* Ensure inputs work after modals */
+        input[type="text"], input[type="password"], input[type="file"], select, textarea {
+            pointer-events: auto !important;
+            -webkit-user-select: text !important;
+            user-select: text !important;
+        }
+
+        .timer-unlock:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+        
+        .no-timers {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 20px;
+        }
+        
+        .locked-user {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        .locked-message {
+            color: #ff4757;
+            font-size: 0.9em;
+            margin-top: 5px;
+            font-weight: 600;
+        }
+        
+        .song-count {
+            background: #4facfe;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        
+        .missing-file {
+            color: #ff4757;
+            font-style: italic;
+        }
+        
+        .reupload-btn {
+            background: #ffa500;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+        
+        .reupload-btn:hover {
+            background: #ff8c00;
+        }
+        
+        .file-status {
+            font-size: 0.8em;
+            margin-left: 8px;
+        }
+        
+        .file-status.missing {
+            color: #ff4757;
+        }
+        
+        .file-status.present {
+            color: #4CAF50;
+        }
+        
+        .audio-controls {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            border: 1px solid #e0e6ed;
+        }
+
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .progress-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: #e0e6ed;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .progress-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #4facfe;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .progress-slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #4facfe;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .time-display {
+            font-size: 0.85em;
+            color: #666;
+            font-family: monospace;
+            min-width: 45px;
+        }
+
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .volume-slider {
+            width: 80px;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            border-radius: 2px;
+            background: #e0e6ed;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4facfe;
+            cursor: pointer;
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4facfe;
+            cursor: pointer;
+            border: none;
+        }
+        .queue-item.dance-song {
+            border-left: 4px solid #ff6b6b !important;
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%) !important;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 Forestwood ExCaliburr 2</h1>
+            <p>Manage users, songs, and join the queue</p>
+            <div id="appInfo" style="font-size: 0.9em; opacity: 0.8; margin-top: 10px;"></div>
+        </div>
+            
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('join', this)">Join Queue</button>
+            <button class="tab" onclick="switchTab('manage', this)">Manage Users</button>
+            <button class="tab" onclick="switchTab('admin', this)">Admin</button>
+        </div>
+        <!-- Admin Tab -->
+            <div class="tab-content" id="adminTab">
+                <h3 style="margin-bottom: 20px; color: #333;">🔧 Manage Dance Songs</h3>
+                
+                <div class="form-group">
+                    <label for="adminLevel">Competition Level:</label>
+                    <select id="adminLevel">
+                        <option value="Pre-Bronze">Pre-Bronze</option>
+                        <option value="Bronze">🥉 Bronze</option>
+                        <option value="Pre-Silver">Pre-Silver</option>
+                        <option value="Silver">🥈 Silver</option>
+                        <option value="Pre-Gold">Pre-Gold</option>
+                        <option value="Gold">🥇 Gold</option>
+                        <option value="International">🌟 International</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="adminSongName">Song Name:</label>
+                    <input type="text" id="adminSongName" placeholder="Enter song name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="adminMusicFile">Upload Song File:</label>
+                    <input type="file" id="adminMusicFile" accept=".mp3,.wav,.flac,.aac,.ogg,.m4a,.wma,.webm,.opus,.aiff,.au,.ra,.3gp,.amr" />
+                </div>
+                
+                <div class="form-row">
+                    <button class="btn secondary" id="addDanceSongBtn">Add Song</button>
+                    <button class="btn danger" onclick="cancelAdminAdd()">Cancel</button>
+                </div>
+                
+                <h4>Current Dance Songs:</h4>
+                <div id="danceSongsList"></div>
+                    <!-- ADD THIS SECTION HERE: -->
+                <hr style="margin: 30px 0;">
+                <h3 style="margin-bottom: 20px; color: #333;">🔑 Change Admin Password</h3>
+                
+                <div class="form-group">
+                    <label for="currentPassword">Current Password:</label>
+                    <input type="password" id="currentPassword" placeholder="Enter current password">
+                </div>
+                
+                <div class="form-group">
+                    <label for="newPassword">New Password:</label>
+                    <input type="password" id="newPassword" placeholder="Enter new password">
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm New Password:</label>
+                    <input type="password" id="confirmPassword" placeholder="Confirm new password">
+                </div>
+                
+                <div class="form-row">
+                    
+                    <button class="btn secondary" onclick="changePassword()">Change Password</button>
+                    <button class="btn danger" onclick="cancelPasswordChange()">Cancel</button>
+                </div>
+                
+            </div>            
+        <!-- END Admin Tab -->
+
+        <!-- Join Queue Tab -->
+        <div class="tab-content active" id="joinTab">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="userSelect">Select User:</label>
+                    <select id="userSelect" onchange="updateSongOptions()">
+                        <option value="">Choose a user...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="songSelect">Select Song:</label>
+                    <select id="songSelect" disabled>
+                        <option value="">Select user first...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="danceSelect">Dance:</label>
+                    <select id="danceSelect">
+                        <option value="">Choose dance song...</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="lockWarning" class="locked-message" style="display: none;">
+                ⚠️ This user is currently locked with an active practice timer
+            </div>
+            
+            <button class="btn" id="addToQueueBtn" onclick="addToQueue()">Add to Queue</button>
+        </div>
+        
+        <!-- Manage Users Tab -->
+        <div class="tab-content" id="manageTab">
+            <div class="form-group">
+            <label for="newUserName">New User Name:</label>
+            <input type="text" id="newUserName" placeholder="Enter user name" onkeypress="if(event.key==='Enter') createUserAndReset()">
+        </div>
+
+        <button class="btn secondary" onclick="createUserAndReset()">Create User</button>
+            
+            <div class="user-list" id="userList">
+                <p style="text-align: center; color: #666;">No users created yet</p>
+            </div>
+        <!-- Add Song Section -->
+            <div id="addSongSection" style="display: none;">
+                <h3 style="margin-bottom: 20px; color: #333;">Add Song to <span id="selectedUserName"></span></h3>
+                
+                <div class="form-group">
+                    <label for="songName">Song Name:</label>
+                    <input type="text" id="songName" placeholder="Enter song name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="musicFile">Select Music File:</label>
+                    <input type="file" id="musicFile" accept=".mp3,.wav,.flac,.aac,.ogg,.m4a,.wma,.webm,.opus,.aiff,.au,.ra,.3gp,.amr" />
+                </div>
+                
+                <div class="form-row">
+                    <button class="btn secondary" onclick="addSongToUser()">Add Song</button>
+                    <button class="btn danger" onclick="cancelAddSong()">Cancel</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Admin Tab -->
+        <div class="tab-content" id="adminTab">
+            <h3 style="margin-bottom: 20px; color: #333;">🔧 Manage Dance Songs</h3>
+            
+            <div class="form-group">
+                <label for="adminLevel">Competition Level:</label>
+                <select id="adminLevel">
+                    <option value="Pre-Bronze">Pre-Bronze</option>
+                    <option value="Bronze">🥉 Bronze</option>
+                    <option value="Pre-Silver">Pre-Silver</option>
+                    <option value="Silver">🥈Silver</option>
+                    <option value="Pre-Gold">Pre-Gold</option>
+                    <option value="Gold">🥇 Gold</option>
+                    <option value="International">International</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="adminSongName">Song Name:</label>
+                <input type="text" id="adminSongName" placeholder="Enter song name">
+            </div>
+            
+            <div class="form-group">
+                <label for="adminMusicFile">Upload Song File:</label>
+                <input type="file" id="adminMusicFile" accept=".mp3,.wav,.flac,.aac,.ogg,.m4a,.wma,.webm,.opus,.aiff,.au,.ra,.3gp,.amr" />
+            </div>
+            
+            <div class="form-row">
+                <button class="btn secondary" onclick="addDanceSongToLibrary()">Add Song</button>
+                <button class="btn danger" onclick="cancelAdminAdd()">Cancel</button>
+            </div>
+            
+            <h4>Current Dance Songs:</h4>
+            <div id="danceSongsList"></div>
+        </div>
+       
+        <!-- Queue Section -->
+        <div class="queue-section tab-content">
+            <div style="padding: 30px;">
+                <div class="queue-header">
+                    <h2>Current Queue</h2>
+                    <div class="queue-count" id="queueCount">0 in queue</div>
+                </div>
+                
+                <ul class="queue-list" id="queueList">
+                    <li class="empty-queue">No one in queue yet. Add someone to get started!</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Practice Timer Section -->
+        <div class="timer-section">
+            <div class="timer-header">
+                <h3>⏱️ Practice Timers</h3>
+                <p style="color: #666; margin: 0;">15-minute practice sessions for non-lesson users</p>
+            </div>
+            
+            <div class="timer-list" id="timerList">
+                <div class="no-timers">No active practice timers</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal for lesson confirmation -->
+    <div class="modal" id="lessonModal">
+        <div class="modal-content">
+            <h3>Are you currently in a lesson?</h3>
+            <p>This will give you priority in the queue.</p>
+            <div class="modal-buttons">
+                <button class="modal-btn yes" id="yesBtn">Yes, I'm in a lesson</button>
+                <button class="modal-btn no" id="noBtn">No, I'm not in a lesson</button>
+            </div>
+        </div>
+    </div>
+    <!-- Password Modal -->
+    <div class="modal" id="passwordModal" style="display: none;">
+        <div class="modal-content">
+            <h3>🔐 Admin Access Required</h3>
+            <p>Enter password to access this section:</p>
+            <input type="password" id="passwordInput" placeholder="Enter password" style="width: 100%; margin: 10px 0; padding: 8px;">
+            <div class="modal-buttons">
+                <button class="modal-btn yes" onclick="checkPassword()">Submit</button>
+                <button class="modal-btn no" onclick="closePasswordModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+    <!-- Notification System -->
+    <div id="notification" class="notification" style="display: none;">
+        <div class="notification-content">
+            <span id="notificationMessage"></span>
+            <button onclick="closeNotification()" class="notification-close">×</button>
+        </div>
+    </div>
+
+    <script>
+        let users = {};
+        let queue = [];
+        let pendingQueueItem = null;
+        let currentAudio = null;
+        let currentlyPlayingIndex = -1;
+        let selectedUserId = null;
+        let progressUpdateInterval = null;
+        let isDragging = false;
+        let practiceTimers = {};
+        let timerUpdateInterval = null;
+        let currentlyPlaying = null;
+        // Dance songs organized by competition levels
+        let danceSongs = {
+            "Pre-Bronze": [],
+            "🥉 Bronze": [],
+            "Pre-Silver": [],
+            "🥈 Silver": [],
+            "Pre-Gold": [],
+            "🥇 Gold": [],
+            "International": []
+        };
+        let pendingTabSwitch = null;
+        let pendingUnlockUser = null;
+
+        function reuploadSong(userId, songIndex) {
+            const user = users[userId];
+            const song = user.songs[songIndex];
+            
+            if (!song) return;
+            
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = '.mp3,.wav,.flac,.aac,.ogg,.m4a,.wma,.webm,.opus,.aiff,.au,.ra,.3gp,.amr';
+            
+            fileInput.onchange = function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const supportedFormats = ['.mp3', '.wav', '.flac', '.aac', '.ogg', '.m4a', '.wma', '.webm', '.opus', '.aiff', '.au', '.ra', '.3gp', '.amr'];
+                const fileExtension = '.' + file.name.toLowerCase().split('.').pop();
+                
+                if (!supportedFormats.includes(fileExtension) && !file.type.startsWith('audio/')) {
+                    showNotification('Please select a supported audio file format','error');
+                    return;
+                }
+                
+                song.file = file;
+                song.fileName = file.name;
+                
+                updateUserList();
+                updateUserDropdown();
+                saveData();
+                
+                showNotification(`File re-uploaded for "${song.name}"!`,'error');
+            };
+            
+            fileInput.click();
+        }
+        
+  async function loadData() {
+    try {
+        const savedUsers = localStorage.getItem('musicQueueUsers');
+        if (savedUsers) {
+            const parsedUsers = JSON.parse(savedUsers);
+            users = parsedUsers;
+            
+            if (window.electronAPI && window.electronAPI.isElectron) {
+                Object.keys(users).forEach(async (userId) => {
+                    const user = users[userId];
+                    for (let i = 0; i < user.songs.length; i++) {
+                        const song = user.songs[i];
+                        if (song.savedFileName) {
+                            const exists = await window.electronAPI.fileExists(song.savedFileName);
+                            if (exists) {
+                                const fileBuffer = await window.electronAPI.loadFile(song.savedFileName);
+                                const blob = new Blob([fileBuffer], { type: 'audio/mpeg' });
+                                song.file = new File([blob], song.fileName, { type: 'audio/mpeg' });
+                            }
+                        }
+                    }
+                
+                });
+            } else {
+                Object.keys(users).forEach(userId => {
+                    users[userId].songs.forEach(song => {
+                        delete song.file;
+                        delete song.savedFileName;
+                    });
+                });
+            }
+        }
+        
+        // ADD DANCE SONGS LOADING:
+        const savedDanceSongs = localStorage.getItem('musicQueueDanceSongs');
+        if (savedDanceSongs) {
+            const parsedDanceSongs = JSON.parse(savedDanceSongs);
+            
+            if (window.electronAPI && window.electronAPI.isElectron) {
+                for (const level of Object.keys(parsedDanceSongs)) {
+                    danceSongs[level] = [];
+                    for (const songData of parsedDanceSongs[level]) {
+                        const song = {
+                            name: songData.name,
+                            fileName: songData.fileName,
+                            savedFileName: songData.savedFileName
+                        };
+                        
+                        if (songData.savedFileName) {
+                            const exists = await window.electronAPI.fileExists(songData.savedFileName);
+                            if (exists) {
+                                const fileBuffer = await window.electronAPI.loadFile(songData.savedFileName);
+                                const blob = new Blob([fileBuffer], { type: 'audio/mpeg' });
+                                song.file = new File([blob], song.fileName, { type: 'audio/mpeg' });
+                            }
+                        }
+                        
+                        danceSongs[level].push(song);
+                    }
+                }
+            } else {
+                // Browser version - remove file objects
+                for (const level of Object.keys(parsedDanceSongs)) {
+                    danceSongs[level] = parsedDanceSongs[level].map(song => ({
+                        name: song.name,
+                        fileName: song.fileName
+                    }));
+                }
+            }
+            
+            populateDanceDropdown();
+            updateDanceSongsList();
+        }
+        
+    } catch (e) {
+        console.log('No saved data found or error loading:', e);
+    }
+
+  // Load queue immediately
+const savedQueue = localStorage.getItem('musicQueueList');
+if (savedQueue) {
+    const parsedQueue = JSON.parse(savedQueue);
+    
+    queue = parsedQueue.map(queueItem => {
+        const user = Object.values(users).find(u => u.name === queueItem.name);
+        if (user) {
+            const song = user.songs.find(s => s.name === queueItem.songName);
+            if (song) {
+                return { ...queueItem, file: song.file };
+            }
+        }
+        return queueItem;
+    });
+    
+    console.log('Restored queue with', queue.length, 'items');
+}
+
+const savedTimers = localStorage.getItem('musicQueueTimers');
+if (savedTimers) {
+    practiceTimers = JSON.parse(savedTimers);
+    
+    if (Object.keys(practiceTimers).length > 0) {
+        if (!timerUpdateInterval) {
+            timerUpdateInterval = setInterval(updateTimerDisplay, 1000);
+        }
+    }
+}
+
+        updateUserDropdown();
+        updateUserList();
+        // Force queue display update with delay
+        setTimeout(() => {
+        updateQueueDisplay();
+        updateTimerDisplay();        
+        // Make sure queue section is visible on join tab
+        const joinTab = document.getElementById('joinTab');
+        if (joinTab && joinTab.classList.contains('active')) {
+        document.querySelector('.queue-section').classList.add('active');
+            }            
+        console.log('Forced queue display update - queue length:', queue.length);
+        }, 500);
+        saveData()
+
+    }
+        
+async function saveData() {
+    console.log('saveData() called - current queue length:', queue.length);
+    try {
+        const usersForStorage = {};
+        
+        for (const userId of Object.keys(users)) {
+            const user = users[userId];
+            usersForStorage[userId] = {
+                name: user.name,
+                songs: []
+            };
+            
+            for (const song of user.songs) {
+                const songForStorage = {
+                    name: song.name,
+                    fileName: song.fileName
+                };
+                
+                if (window.electronAPI && window.electronAPI.isElectron && song.file && !song.savedFileName) {
+                    try {
+                        const fileBuffer = await song.file.arrayBuffer();
+                        const savedFileName = await window.electronAPI.saveFile(song.fileName, fileBuffer);
+                        song.savedFileName = savedFileName;
+                        songForStorage.savedFileName = savedFileName;
+                    } catch (error) {
+                        console.error('Error saving file to disk:', error);
+                    }
+                } else if (song.savedFileName) {
+                    songForStorage.savedFileName = song.savedFileName;
+                }
+                
+                usersForStorage[userId].songs.push(songForStorage);
+            }
+        }
+        
+        localStorage.setItem('musicQueueUsers', JSON.stringify(usersForStorage));
+        
+        // ADD DANCE SONGS SAVING:
+        const danceSongsForStorage = {};
+        
+        for (const level of Object.keys(danceSongs)) {
+            danceSongsForStorage[level] = [];
+            
+            for (const song of danceSongs[level]) {
+                const songForStorage = {
+                    name: song.name,
+                    fileName: song.fileName
+                };
+                
+                if (window.electronAPI && window.electronAPI.isElectron && song.file && !song.savedFileName) {
+                    try {
+                        const fileBuffer = await song.file.arrayBuffer();
+                        const savedFileName = await window.electronAPI.saveFile(song.fileName, fileBuffer);
+                        song.savedFileName = savedFileName;
+                        songForStorage.savedFileName = savedFileName;
+                    } catch (error) {
+                        console.error('Error saving dance song file to disk:', error);
+                    }
+                } else if (song.savedFileName) {
+                    songForStorage.savedFileName = song.savedFileName;
+                }
+                
+                danceSongsForStorage[level].push(songForStorage);
+            }
+        }
+        
+        localStorage.setItem('musicQueueDanceSongs', JSON.stringify(danceSongsForStorage));
+        // ADD QUEUE AND TIMER SAVING:
+const queueForStorage = queue.map(queueItem => ({
+    name: queueItem.name,
+    songName: queueItem.songName,
+    fileName: queueItem.fileName,
+    isDanceSong: queueItem.isDanceSong || false,
+    isInLesson: queueItem.isInLesson,
+    bumpCount: queueItem.bumpCount,
+    addedAt: queueItem.addedAt
+}));
+
+localStorage.setItem('musicQueueList', JSON.stringify(queueForStorage));
+
+// Save timers
+const timersForStorage = {};
+Object.keys(practiceTimers).forEach(userName => {
+    const timer = practiceTimers[userName];
+    timersForStorage[userName] = {
+        startTime: timer.startTime,
+        duration: timer.duration,
+        isQueued: timer.isQueued,
+        isDanceSong: timer.isDanceSong || false
+    };
+});
+
+localStorage.setItem('musicQueueTimers', JSON.stringify(timersForStorage));
+
+    } catch (e) {
+        console.log('Could not save data:', e);
+    }
+}
+        
+        function debug(message) {
+            console.log(message);
+        }
+
+       
+
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function formatTimerDisplay(milliseconds) {
+            const totalSeconds = Math.floor(milliseconds / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+       function startPracticeTimer(userName) {
+    if (practiceTimers[userName]) {
+        // User is already locked, now start the actual timer
+        practiceTimers[userName].startTime = new Date();
+        practiceTimers[userName].isQueued = false; // No longer just queued
+        debug(`Started 15-minute countdown timer for ${userName}`);
+    } else {
+        // Fallback - shouldn't happen with new system but just in case
+        practiceTimers[userName] = {
+            startTime: new Date(),
+            duration: 15 * 60 * 1000,
+            isQueued: false
+        };
+        debug(`Started 15-minute timer for ${userName} (fallback)`);
+    }
+    
+    if (!timerUpdateInterval) {
+        timerUpdateInterval = setInterval(updateTimerDisplay, 1000);
+    }
+    
+    updateTimerDisplay();
+    updateUserDropdown();
+}
+        // Save dance songs to browser storage
+function saveDanceSongs() {
+    localStorage.setItem('danceSongs', JSON.stringify(danceSongs));
+}
+
+        // Load dance songs from browser storage
+        function loadDanceSongs() {
+            const saved = localStorage.getItem('danceSongs');
+            if (saved) {
+                const parsedSongs = JSON.parse(saved);
+                // Merge with existing structure
+                Object.keys(parsedSongs).forEach(level => {
+                    if (parsedSongs[level] && Array.isArray(parsedSongs[level])) {
+                        danceSongs[level] = parsedSongs[level];
+                    }
+                });
+                populateDanceDropdown();
+            }
+        }
+
+        // Update your addDanceSongToLibrary function to save after adding
+function addDanceSongToLibrary() {
+    fixInputFocus();
+      console.log('addDanceSongToLibrary called!'); 
+    const level = document.getElementById('adminLevel').value;
+    const songNameInput = document.getElementById('adminSongName');
+    const fileInput = document.getElementById('adminMusicFile');
+    
+    const songName = songNameInput.value.trim();
+    const file = fileInput.files && fileInput.files[0];
+    
+    if (!songName) {
+        showNotification('Please enter a song name','error');
+        return;
+    }
+    
+    if (!file) {
+        showNotification('Please select a music file','error');
+        return;
+    }
+    
+    const supportedFormats = ['.mp3', '.wav', '.flac', '.aac', '.ogg', '.m4a', '.wma', '.webm', '.opus', '.aiff', '.au', '.ra', '.3gp', '.amr'];
+    const fileExtension = '.' + file.name.toLowerCase().split('.').pop();
+    
+    if (!supportedFormats.includes(fileExtension) && !file.type.startsWith('audio/')) {
+        showNotification(`Unsupported file format: ${file.name}. Please select MP3, WAV, FLAC, AAC, OGG, M4A, WMA, WebM, Opus, AIFF, AU, RA, 3GP, or AMR.`, 'error');
+        return;
+    }
+    
+    // Create new dance song (same structure as user songs)
+    const newDanceSong = {
+        name: songName,
+        file: file,
+        fileName: file.name,
+        filePath: URL.createObjectURL(file)
+    };
+    
+    danceSongs[level].push(newDanceSong);
+    
+    // Update displays
+    populateDanceDropdown();
+    updateDanceSongsList();
+    saveData(); // Save to localStorage
+    
+    // Clear form
+    cancelAdminAdd();
+    
+    showNotification(`Dance song "${songName}" added to ${level}!`,'success');
+}
+        function stopPracticeTimer(userName) {
+            if (practiceTimers[userName]) {
+                delete practiceTimers[userName];
+                debug(`Stopped timer for ${userName}`);
+                
+                if (Object.keys(practiceTimers).length === 0 && timerUpdateInterval) {
+                    clearInterval(timerUpdateInterval);
+                    timerUpdateInterval = null;
+                }
+                
+                updateTimerDisplay();
+                updateUserDropdown();
+            }
+        }
+        
+       function unlockUser(userName) {
+    // Set up for password check
+    pendingUnlockUser = userName;
+    document.getElementById('passwordModal').style.display = 'block';
+    document.getElementById('passwordInput').focus();
+}
+       function performUnlockUser(userName) {
+    if (practiceTimers[userName]) {
+        stopPracticeTimer(userName);
+        showNotification(`${userName} has been unlocked and can now add songs again.`, 'success');
+    }
+} 
+        function isUserLocked(userName) {
+            return practiceTimers[userName] !== undefined;
+        }
+
+        // Aggressive fix for input focus after modals
+        function fixInputFocus() {
+            setTimeout(() => {
+                // Clear any event capture that might be blocking
+                document.removeEventListener('click', arguments.callee, true);
+                document.removeEventListener('focus', arguments.callee, true);
+                
+                // Force remove all modal-related blocking
+                document.body.style.overflow = 'auto';
+                document.body.style.pointerEvents = 'auto';
+                document.documentElement.style.pointerEvents = 'auto';
+                
+                // Re-enable all form elements
+                document.querySelectorAll('input, select, textarea, button').forEach(element => {
+                    element.disabled = false;
+                    element.style.pointerEvents = 'auto';
+                    element.style.userSelect = 'text';
+                    element.tabIndex = element.tabIndex || 0;
+                });
+                
+                // Force focus capability back
+                document.addEventListener('click', function(e) {
+                    if (e.target.matches('input[type="text"], input[type="password"], textarea')) {
+                        e.target.focus();
+                    }
+                });
+                
+            }, 50);
+            
+            // Second attempt after longer delay
+            setTimeout(() => {
+                document.querySelectorAll('input[type="text"], input[type="password"], textarea').forEach(input => {
+                    input.focus();
+                    input.blur();
+                });
+            }, 200);
+        }
+
+        function updateTimerDisplay() {
+    const timerList = document.getElementById('timerList');
+    
+    if (!timerList) return;
+    
+    const activeTimers = Object.keys(practiceTimers);
+    
+    if (activeTimers.length === 0) {
+        timerList.innerHTML = '<div class="no-timers">No active practice timers</div>';
+        return;
+    }
+    
+    const now = new Date();
+    
+    timerList.innerHTML = activeTimers.map(userName => {
+        const timer = practiceTimers[userName];
+        
+        if (timer.isQueued) {
+            // User is locked but timer hasn't started counting down yet
+            return `
+                <div class="timer-item">
+                    <div class="timer-name">${userName}</div>
+                    <div class="timer-display normal">
+                        QUEUED
+                    </div>
+                    <div class="timer-status">Waiting for song to play</div>
+                    <button class="timer-unlock" onclick="unlockUser('${userName}')">
+                        🔓 Unlock User
+                    </button>
+                </div>
+            `;
+        } else {
+            // Timer is actively counting down
+            const elapsed = now - timer.startTime;
+            const remaining = Math.max(0, timer.duration - elapsed);
+            const isExpired = remaining === 0;
+            const isWarning = remaining <= 3 * 60 * 1000 && !isExpired;
+            
+            let itemClass = 'timer-item';
+            let displayClass = 'timer-display normal';
+            let status = 'Practice time remaining';
+            
+            if (isExpired) {
+                itemClass += ' expired';
+                displayClass = 'timer-display expired';
+                status = 'Time expired! User can add songs again.';
+                
+                setTimeout(() => stopPracticeTimer(userName), 1000);
+            } else if (isWarning) {
+                itemClass += ' warning';
+                displayClass = 'timer-display warning';
+                status = 'Time almost up!';
+            }
+            
+            return `
+                <div class="${itemClass}">
+                    <div class="timer-name">${userName}</div>
+                    <div class="${displayClass}">
+                        ${isExpired ? '00:00' : formatTimerDisplay(remaining)}
+                    </div>
+                    <div class="timer-status">${status}</div>
+                    <button class="timer-unlock" onclick="unlockUser('${userName}')">
+                        🔓 Unlock User
+                    </button>
+                </div>
+            `;
+        }
+    }).join('');
+}
+
+        function updateProgress() {
+            if (!currentAudio || isDragging) return;
+            
+            const progressSlider = document.getElementById('progressSlider');
+            const currentTimeDisplay = document.getElementById('currentTime');
+            
+            if (progressSlider && currentTimeDisplay) {
+                const progress = (currentAudio.currentTime / currentAudio.duration) * 100;
+                progressSlider.value = progress || 0;
+                currentTimeDisplay.textContent = formatTime(currentAudio.currentTime);
+            }
+        }
+
+        function seekTo(percentage) {
+            if (!currentAudio || !currentAudio.duration) return;
+            
+            const newTime = (percentage / 100) * currentAudio.duration;
+            currentAudio.currentTime = newTime;
+        }
+
+        function setVolume(value) {
+            if (currentAudio) {
+                currentAudio.volume = value / 100;
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            fixInputFocus();          
+            const yesBtn = document.getElementById('yesBtn');
+            const noBtn = document.getElementById('noBtn');
+            const modal = document.getElementById('lessonModal');
+            
+            if (yesBtn) {
+                yesBtn.addEventListener('click', () => confirmLesson(true));
+            }
+            
+            if (noBtn) {
+                noBtn.addEventListener('click', () => confirmLesson(false));
+            }
+            
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        modal.style.display = 'none';
+                        pendingQueueItem = null;
+                    }
+                });
+            }
+            const addDanceSongBtn = document.getElementById('addDanceSongBtn');
+                    if (addDanceSongBtn) {
+                        addDanceSongBtn.addEventListener('click', addDanceSongToLibrary);
+                }
+            //New Code
+            const newUserInput = document.getElementById('newUserName');
+                    if (newUserInput) {
+                        newUserInput.addEventListener('blur', function() {
+                            // Re-enable the input if it gets disabled somehow
+                            this.disabled = false;
+                        });
+                    }
+                    populateDanceDropdown();
+                    
+                  
+            // END OF NEW CODE
+
+            loadData();
+            updateTimerDisplay();
+            
+            if (window.electronAPI && window.electronAPI.isElectron) {
+                document.getElementById('appInfo').innerHTML = '🖥️ Desktop App - Files persist automatically';
+            } else {
+                document.getElementById('appInfo').innerHTML = '🌐 Browser Mode - Files need re-upload after refresh';
+            }
+        });
+        
+        
+            // Load saved password or use default
+            let ADMIN_PASSWORD = localStorage.getItem('adminPassword') || "fsc123";
+
+            function switchTab(tabName, clickedElement) {
+                console.log('switchTab called with:', tabName);
+                
+                // Password protection for protected tabs
+                //if (tabName === 'manage' || tabName === 'admin') {
+                if (tabName === 'admin') {
+                    console.log('Setting pendingTabSwitch for:', tabName);
+                    pendingTabSwitch = { tabName: tabName, clickedElement: clickedElement };
+                    console.log('pendingTabSwitch set to:', pendingTabSwitch);
+                    
+                    document.getElementById('passwordModal').style.display = 'block';
+                    document.getElementById('passwordInput').focus();
+                    return;
+                }
+                
+                // Regular tab switching for Join Queue
+                performTabSwitch(tabName, clickedElement);
+            }
+
+            function checkPassword() {
+                const password = document.getElementById('passwordInput').value;
+                console.log('Password entered:', password);
+                console.log('Expected password:', ADMIN_PASSWORD);
+                
+                if (password === ADMIN_PASSWORD) {
+                    console.log('Password correct!');
+                    
+                    // Handle tab switching
+                    if (pendingTabSwitch) {
+                        console.log('About to switch to tab:', pendingTabSwitch.tabName);
+                        performTabSwitch(pendingTabSwitch.tabName, null);
+                        pendingTabSwitch = null;
+                    }
+                    
+                    // Handle user unlock
+                    if (pendingUnlockUser) {
+                        performUnlockUser(pendingUnlockUser);
+                        pendingUnlockUser = null;
+                    }
+                    
+                    closePasswordModal();
+                    
+                } else {
+                    console.log('Password incorrect');
+                    showNotification('Incorrect password!', 'error');
+                    document.getElementById('passwordInput').value = '';
+                    document.getElementById('passwordInput').focus();
+                }
+            }
+
+            function closePasswordModal() {
+                document.getElementById('passwordModal').style.display = 'none';
+                document.getElementById('passwordInput').value = '';
+                pendingUnlockUser = null;
+                // DON'T reset pendingTabSwitch here - let checkPassword handle it
+            }
+
+            function performTabSwitch(tabName, clickedElement) {
+                // Remove active class from all tabs
+                document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                if (clickedElement) {
+                    clickedElement.classList.add('active');
+                }
+                
+                // Hide all tab content
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                document.querySelector('.queue-section').classList.remove('active');
+                
+                // Show selected tab content
+                if (tabName === 'join') {
+                    document.getElementById('joinTab').classList.add('active');
+                    document.querySelector('.queue-section').classList.add('active');
+                } else if (tabName === 'manage') {
+                    document.getElementById('manageTab').classList.add('active');
+                } else if (tabName === 'admin') {
+                    document.getElementById('adminTab').classList.add('active');
+                }
+            }
+                function changePassword() {
+                const currentPassword = document.getElementById('currentPassword').value;
+                const newPassword = document.getElementById('newPassword').value.trim();
+                const confirmPassword = document.getElementById('confirmPassword').value.trim();
+                
+                if (!currentPassword || !newPassword || !confirmPassword) {
+                    showNotification('Please fill in all password fields', 'error');
+                    return;
+                }
+                
+                if (currentPassword !== ADMIN_PASSWORD) {
+                    showNotification('Current password is incorrect','error');
+                    document.getElementById('currentPassword').focus();
+                    return;
+                }
+                
+                if (newPassword !== confirmPassword) {
+                    showNotification('New passwords do not match','error');
+                    document.getElementById('newPassword').focus();
+                    return;
+                }
+                
+                if (newPassword.length < 6) {
+                    showNotification('New password must be at least 6 characters long','error');
+                    document.getElementById('newPassword').focus();
+                    return;
+                }
+                
+                // Save new password
+                ADMIN_PASSWORD = newPassword;
+                localStorage.setItem('adminPassword', newPassword);
+                
+                // Clear form
+                cancelPasswordChange();
+                
+                showNotification('Password changed successfully!','success');
+            }
+
+            function cancelPasswordChange() {
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+            }
+        async function addDanceSongToLibrary() {
+            console.log('addDanceSongToLibrary called!');
+            
+            const level = document.getElementById('adminLevel').value;
+            const songNameInput = document.getElementById('adminSongName');
+            const fileInput = document.getElementById('adminMusicFile');
+            
+            const songName = songNameInput.value.trim();
+            const file = fileInput.files && fileInput.files[0];
+            
+            if (!songName) {
+                showNotification('Please enter a song name','error');
+                return;
+            }
+            
+            if (!file) {
+                showNotification('Please select a music file','error');
+                return;
+            }
+            
+            const supportedFormats = ['.mp3', '.wav', '.flac', '.aac', '.ogg', '.m4a', '.wma', '.webm', '.opus', '.aiff', '.au', '.ra', '.3gp', '.amr'];
+            const fileExtension = '.' + file.name.toLowerCase().split('.').pop();
+            
+            if (!supportedFormats.includes(fileExtension) && !file.type.startsWith('audio/')) {
+                showNotification(`Unsupported file format: ${file.name}. Please select MP3, WAV, FLAC, AAC, OGG, M4A, WMA, WebM, Opus, AIFF, AU, RA, 3GP, or AMR.`, 'error');
+                return;
+            }
+            
+            const newDanceSong = {
+                name: songName,
+                file: file,
+                fileName: file.name,
+                filePath: URL.createObjectURL(file)
+            };
+            
+            danceSongs[level].push(newDanceSong);
+            
+            populateDanceDropdown();
+            updateDanceSongsList();
+            
+            try {
+                await saveData(); // Wait for save to complete
+                cancelAdminAdd();
+                showNotification(`Dance song "${songName}" added to ${level}!`,'success');
+            } catch (error) {
+                console.error('Error saving:', error);
+                showNotification('Error saving dance song','error');
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const messageEl = document.getElementById('notificationMessage');
+                
+            messageEl.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.style.display = 'block';
+                
+                // Auto-hide after 4 seconds
+                setTimeout(() => {
+                    closeNotification();
+                }, 4000);
+            }
+
+        function closeNotification() {
+            document.getElementById('notification').style.display = 'none';
+            }
+
+        function cancelAdminAdd() {
+        fixInputFocus();
+        document.getElementById('adminSongName').value = '';
+        document.getElementById('adminMusicFile').value = '';
+             }
+
+        function updateDanceSongsList() {
+        fixInputFocus();
+        const container = document.getElementById('danceSongsList');
+        container.innerHTML = '';
+        
+        Object.keys(danceSongs).forEach(level => {
+            if (danceSongs[level].length > 0) {
+                const levelDiv = document.createElement('div');
+                levelDiv.innerHTML = `<h5>${level}:</h5>`;
+                
+                danceSongs[level].forEach((song, index) => {
+                    const songDiv = document.createElement('div');
+                    songDiv.innerHTML = `
+                        <span>${song.name}</span>
+                        <button onclick="removeDanceSong('${level}', ${index})" style="margin-left: 10px; background: #dc3545; color: white; border: none; padding: 2px 8px; border-radius: 3px; font-size: 0.8em;">Remove</button>
+                    `;
+                    levelDiv.appendChild(songDiv);
+                });
+                
+                container.appendChild(levelDiv);
+            }
+        });
+    }
+
+    async function removeDanceSong(level, index) {
+        danceSongs[level].splice(index, 1);
+        populateDanceDropdown();
+        updateDanceSongsList();
+        
+        try {
+            await saveData();
+            console.log('Dance song deleted and saved successfully!');
+        } catch (error) {
+            console.error('Error saving after delete:', error);
+            showNotification('Error saving changes','success');
+        }
+    }
+    function populateDanceDropdown() {
+    const select = document.getElementById('danceSelect');
+    select.innerHTML = '<option value="">Choose dance song...</option>';
+    
+    // Level display names with emojis
+    const levelDisplayNames = {
+        "Pre-Bronze": "Pre-Bronze",
+        "Bronze": "🥉 Bronze", 
+        "Pre-Silver": "Pre-Silver",
+        "Silver": "🥈 Silver",
+        "Pre-Gold": "Pre-Gold", 
+        "Gold": "🥇 Gold",
+        "International": "🌟 International"
+    };
+    
+    Object.keys(danceSongs).forEach(level => {
+        if (danceSongs[level].length > 0) {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = levelDisplayNames[level] || level; // Use emoji version for display
+            
+            danceSongs[level].forEach((song, index) => {
+                const option = document.createElement('option');
+                option.value = `${level}|${index}`;
+                option.textContent = song.name;
+                optgroup.appendChild(option);
+            });
+            
+            select.appendChild(optgroup);
+        }
+    });
+}
+
+      function createUserAndReset() {
+            const nameInput = document.getElementById('newUserName');
+           
+            if (nameInput.dataset.deleteMode === 'true') {
+               return;
+    }
+   
+            const name = nameInput.value.trim();
+            
+            if (!name) {
+                // Replace alert with a visual message
+                nameInput.style.borderColor = '#f44336';
+                nameInput.placeholder = 'Please enter a user name';
+                setTimeout(() => {
+                    nameInput.style.borderColor = '#ddd';
+                    nameInput.placeholder = 'Enter user name';
+                }, 2000);
+                return;
+            }
+            
+            const existingUser = Object.values(users).find(user => user.name.toLowerCase() === name.toLowerCase());
+            if (existingUser) {
+                // Replace alert with a visual message
+                nameInput.style.borderColor = '#f44336';
+                nameInput.value = '';
+                nameInput.placeholder = 'User already exists!';
+                setTimeout(() => {
+                    nameInput.style.borderColor = '#ddd';
+                    nameInput.placeholder = 'Enter user name';
+                    nameInput.focus();
+                }, 2000);
+                return;
+            }
+            
+            const userId = 'user_' + Date.now();
+            users[userId] = {
+                name: name,
+                songs: []
+            };
+            
+            // Clear input first
+            nameInput.value = '';
+            nameInput.placeholder = `"${name}" created successfully!`;
+            nameInput.style.borderColor = '#4CAF50';
+            
+            updateUserList();
+            updateUserDropdown();
+            saveData();
+            
+            // Reset placeholder and focus
+            setTimeout(() => {
+                nameInput.placeholder = 'Enter user name';
+                nameInput.style.borderColor = '#ddd';
+                nameInput.focus();
+            }, 2000);
+        }
+        
+        function deleteUser(userId) {
+            const userName = users[userId].name;
+            
+            // Visual confirmation using input field
+            const nameInput = document.getElementById('newUserName');
+            if (nameInput) {
+                // Clear any existing delete listeners first
+                const oldListener = nameInput._deleteListener;
+                if (oldListener) {
+                    nameInput.removeEventListener('keypress', oldListener);
+                }
+                
+                nameInput.value = '';
+                nameInput.placeholder = `Delete ${userName}? Type YES to confirm`;
+                nameInput.style.borderColor = '#f44336';
+                nameInput.focus();
+                
+                // Store the pending delete info
+                nameInput.dataset.deleteMode = 'true';
+                nameInput.dataset.deleteUserId = userId;
+                nameInput.dataset.deleteUserName = userName;
+                
+                // Create the event listener function
+                const handleConfirm = function(e) {
+                    if (e.key === 'Enter') {
+                        const value = e.target.value.toUpperCase();
+                        const currentUserId = nameInput.dataset.deleteUserId;
+                        const currentUserName = nameInput.dataset.deleteUserName;
+                        
+                        if (value === 'YES') {
+                            // Delete user's music files first
+                            const user = users[currentUserId];
+                            if (user && user.songs) {
+                                user.songs.forEach(song => {
+                                    if (song.savedFileName && window.electronAPI && window.electronAPI.deleteFile) {
+                                        window.electronAPI.deleteFile(song.savedFileName)
+                                            .then(() => console.log('Deleted file:', song.savedFileName))
+                                            .catch(error => console.error('Error deleting file:', song.savedFileName, error));
+                                    }
+                                });
+                            }
+                            
+                            // Delete the user
+                            delete users[currentUserId];
+                            updateUserList();
+                            updateUserDropdown();
+                            saveData();
+                            
+                            // Success feedback
+                            nameInput.value = '';
+                            nameInput.placeholder = `${currentUserName} deleted!`;
+                            nameInput.style.borderColor = '#4CAF50';
+                            
+                            // Reset after 2 seconds
+                            setTimeout(() => {
+                                nameInput.placeholder = 'Enter user name';
+                                nameInput.style.borderColor = '#ddd';
+                            }, 2000);
+                        } else {
+                            // Cancel - reset the field
+                            nameInput.value = '';
+                            nameInput.placeholder = 'Enter user name';
+                            nameInput.style.borderColor = '#ddd';
+                        }
+                        
+                        // Clean up
+                        delete nameInput.dataset.deleteMode;
+                        delete nameInput.dataset.deleteUserId;
+                        delete nameInput.dataset.deleteUserName;
+                        nameInput.removeEventListener('keypress', handleConfirm);
+                        nameInput._deleteListener = null;
+                    }
+                };
+                
+                // Store reference to listener and add it
+                nameInput._deleteListener = handleConfirm;
+                nameInput.addEventListener('keypress', handleConfirm);
+            }
+        }
+        
+        function showAddSongForm(userId) {
+            selectedUserId = userId;
+            document.getElementById('selectedUserName').textContent = users[userId].name;
+            document.getElementById('addSongSection').style.display = 'block';
+        }
+        
+        function cancelAddSong() {
+            selectedUserId = null;
+            document.getElementById('addSongSection').style.display = 'none';
+            document.getElementById('songName').value = '';
+            document.getElementById('musicFile').value = '';
+        }
+        
+        function addSongToUser() {
+            if (!selectedUserId) return;
+            
+            const songNameInput = document.getElementById('songName');
+            const fileInput = document.getElementById('musicFile');
+            
+            const songName = songNameInput.value.trim();
+            const file = fileInput.files && fileInput.files[0];
+            
+            if (!songName) {
+                showNotification('Please enter a song name','error');
+                return;
+            }
+            
+            if (!file) {
+                showNotification('Please select a music file','error');
+                return;
+            }
+            
+            const supportedFormats = ['.mp3', '.wav', '.flac', '.aac', '.ogg', '.m4a', '.wma', '.webm', '.opus', '.aiff', '.au', '.ra', '.3gp', '.amr'];
+            const fileExtension = '.' + file.name.toLowerCase().split('.').pop();
+            
+            if (!supportedFormats.includes(fileExtension) && !file.type.startsWith('audio/')) {
+              showNotification(`Invalid file format: ${file.name}. Please select a supported audio file.`, 'error');
+              return;
+            }
+            
+            const newSong = {
+                name: songName,
+                file: file,
+                fileName: file.name
+            };
+            
+            users[selectedUserId].songs.push(newSong);
+            
+            cancelAddSong();
+            updateUserList();
+            updateUserDropdown();
+            saveData();
+            
+            showNotification(`Song "${songName}" added to ${users[selectedUserId].name}!`,'success');
+        }
+        
+            async function deleteSong(userId, songIndex) {
+            const user = users[userId];
+            const song = user.songs[songIndex];
+                // ADD THIS SECTION - Delete the music file first (if it exists)
+            if (song.savedFileName && window.electronAPI && window.electronAPI.deleteFile) {
+                try {
+                    await window.electronAPI.deleteFile(song.savedFileName);
+                    console.log('Deleted music file:', song.savedFileName);
+                } catch (error) {
+                    console.error('Error deleting music file:', song.savedFileName, error);
+                }
+            }
+            user.songs.splice(songIndex, 1);
+            updateUserList();
+            updateUserDropdown();
+            
+            try {
+                await saveData();
+                console.log(`Song "${song.name}" deleted from ${user.name} successfully!`);
+            } catch (error) {
+                console.error('Error saving after delete:', error);
+                showNotification('Error saving changes','error');
+            }
+        }
+              
+        function updateUserList() {
+            const userList = document.getElementById('userList');
+            
+            if (Object.keys(users).length === 0) {
+                userList.innerHTML = '<p style="text-align: center; color: #666;">No users created yet</p>';
+                return;
+            }
+            
+            userList.innerHTML = Object.keys(users).sort((a, b) => users[a].name.localeCompare(users[b].name)).map(userId => {
+                const user = users[userId];
+                const songsWithFiles = user.songs.filter(song => song.file).length;
+                const totalSongs = user.songs.length;
+                
+                let fileStatusDisplay = '';
+                if (window.electronAPI && window.electronAPI.isElectron) {
+                    fileStatusDisplay = songsWithFiles === totalSongs && totalSongs > 0 
+                        ? '<span class="file-status present">✅ All files ready</span>'
+                        : '<span class="file-status missing">⚠️ Some files missing</span>';
+                } else {
+                    fileStatusDisplay = totalSongs > 0 
+                        ? '<span class="file-status missing">⚠️ Files need re-upload</span>'
+                        : '';
+                }
+                
+                return `
+                    <div class="user-item">
+                        <div class="user-info">
+                            <h4>${user.name} 
+                                <span class="song-count">${songsWithFiles}/${totalSongs} files</span>
+                                ${fileStatusDisplay}
+                            </h4>
+                            <p>${user.songs.map(song => song.name).join(', ') || 'No songs added'}</p>
+                        </div>
+                        <div class="user-actions">
+                            <button class="btn secondary btn-small" onclick="showAddSongForm('${userId}')">Add Song</button>
+                            <button class="btn danger btn-small" onclick="deleteUser('${userId}')">Delete User</button>
+                        </div>
+                    </div>
+                    ${user.songs.length > 0 ? `
+                        <div style="margin-left: 20px; margin-bottom: 15px;">
+                            ${user.songs.map((song, index) => `
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f8f9ff; margin-bottom: 5px; border-radius: 6px;">
+                                    <span>
+                                        🎵 ${song.name} 
+                                        <span style="color: #666;">(${song.fileName})</span>
+                                        ${!song.file ? '<span class="missing-file">⚠️ File missing</span>' : '<span style="color: #4CAF50; font-size: 0.8em;">✅</span>'}
+                                    </span>
+                                    <div>
+                                        ${!song.file ? `<button class="reupload-btn" onclick="reuploadSong('${userId}', ${index})">📁 Re-upload</button>` : ''}
+                                        <button class="btn danger btn-small" onclick="deleteSong('${userId}', ${index})" style="padding: 4px 8px; font-size: 12px; margin-left: 8px;">Delete</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                `;
+            }).join('');
+        }
+        
+        function updateUserDropdown() {
+            const userSelect = document.getElementById('userSelect');
+            const currentValue = userSelect.value;
+            
+            userSelect.innerHTML = '<option value="">Choose a user...</option>' +
+                Object.keys(users).sort((a, b) => users[a].name.localeCompare(users[b].name)).map(userId => {
+                    const user = users[userId];
+                    const isLocked = isUserLocked(user.name);
+                    const lockStatus = isLocked ? ' 🔒 LOCKED' : '';
+                    return `<option value="${userId}" ${isLocked ? 'disabled' : ''}>${user.name} (${user.songs.length} songs)${lockStatus}</option>`;
+                }).join('');
+            
+            if (currentValue && users[currentValue] && !isUserLocked(users[currentValue].name)) {
+                userSelect.value = currentValue;
+                updateSongOptions();
+            } else if (currentValue && isUserLocked(users[currentValue].name)) {
+                userSelect.value = '';
+                updateSongOptions();
+            }
+        }
+        
+        function updateSongOptions() {
+            const userSelect = document.getElementById('userSelect');
+            const songSelect = document.getElementById('songSelect');
+            const selectedUserId = userSelect.value;
+            
+            if (!selectedUserId) {
+                songSelect.innerHTML = '<option value="">Select user first...</option>';
+                songSelect.disabled = true;
+                return;
+            }
+            
+            const user = users[selectedUserId];
+            const isLocked = isUserLocked(user.name);
+            
+            if (isLocked) {
+                songSelect.innerHTML = '<option value="">User is locked - timer active</option>';
+                songSelect.disabled = true;
+                return;
+            }
+            
+            const songsWithFiles = user.songs.filter(song => song.file);
+            
+            if (songsWithFiles.length === 0) {
+                if (user.songs.length > 0) {
+                    songSelect.innerHTML = '<option value="">No files available - please re-upload</option>';
+                } else {
+                    songSelect.innerHTML = '<option value="">No songs available</option>';
+                }
+                songSelect.disabled = true;
+                return;
+            }
+            
+            songSelect.innerHTML = '<option value="">Choose a song...</option>' +
+                user.songs.map((song, index) => {
+                    if (!song.file) return '';
+                    return `<option value="${index}">${song.name}</option>`;
+                }).filter(option => option !== '').join('');
+            
+            songSelect.disabled = false;
+        }
+        
+function addToQueue() {
+    const userSelect = document.getElementById('userSelect');
+    const songSelect = document.getElementById('songSelect');
+    const danceSelect = document.getElementById('danceSelect');
+    
+    const selectedUserId = userSelect.value;
+    const selectedSongIndex = songSelect.value;
+    const selectedDanceValue = danceSelect.value;
+    
+    if (!selectedUserId) {
+        showNotification('Please select a user','error');
+        return;
+    }
+    
+    const user = users[selectedUserId];
+    
+    if (isUserLocked(user.name)) {
+        showNotification(`${user.name} is currently locked with an active practice timer. Please wait for the timer to expire or unlock the user.`,'error');
+        return;
+    }
+    
+    // Check if either a regular song OR dance song is selected
+    if (selectedSongIndex === '' && selectedDanceValue === '') {
+        showNotification('Please select either a regular song or a dance song','error');
+        return;
+    }
+    
+    if (selectedSongIndex !== '' && selectedDanceValue !== '') {
+        showNotification('Please select only one song (either regular OR dance)','error');
+        return;
+    }
+    
+    let songData;
+    let isDanceSong = false;
+    
+    // Handle regular song selection
+    if (selectedSongIndex !== '') {
+        const song = user.songs[parseInt(selectedSongIndex)];
+        if (!song || !song.file) {
+            showNotification('Song file not found. Please re-upload the song.','error');
+            return;
+        }
+        songData = song;
+    }
+    // Handle dance song selection
+    else if (selectedDanceValue !== '') {
+        const [level, index] = selectedDanceValue.split('|');
+        const danceSong = danceSongs[level][parseInt(index)];
+        if (!danceSong || !danceSong.file) {
+            showNotification('Dance song file not found.','error');
+            return;
+        }
+        songData = danceSong;
+        isDanceSong = true;
+    }
+    
+    pendingQueueItem = {
+        name: user.name,
+        songName: songData.name,
+        file: songData.file,
+        fileName: songData.fileName,
+        isDanceSong: isDanceSong,
+        bumpCount: 0,
+        addedAt: new Date()
+    };
+    
+    debug('Pending queue item created, showing modal...');
+    
+    const modal = document.getElementById('lessonModal');
+    if (modal) {
+        modal.style.display = 'block';
+    }
+}
+        
+        function confirmLesson(isInLesson) {
+            debug('Lesson confirmed: ' + isInLesson);
+            
+            const modal = document.getElementById('lessonModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+            
+            if (pendingQueueItem) {
+                pendingQueueItem.isInLesson = isInLesson;
+                
+                // Lock non-lesson users OR anyone who selected a dance song
+                const isDanceSong = pendingQueueItem.isDanceSong || false;
+                if (!isInLesson) {
+                    // Create a placeholder timer (no actual countdown yet)
+                    practiceTimers[pendingQueueItem.name] = {
+                        startTime: null, // null means not started yet
+                        duration: 15 * 60 * 1000,
+                        isQueued: true, // flag to show they're locked but timer not started
+                        isDanceSong: isDanceSong
+                    };
+                    
+                    if (!timerUpdateInterval) {
+                        timerUpdateInterval = setInterval(updateTimerDisplay, 1000);
+                    }
+                }
+                
+if (isInLesson) {
+    let insertPosition = 0;
+    
+    // Find the correct insertion position for lesson users
+    while (insertPosition < queue.length) {
+        if (queue[insertPosition].isInLesson) {
+            // Skip past lesson users
+            insertPosition++;
+        } else if (queue[insertPosition].bumpCount >= 3) {
+            // This is a protected (bumped 3x) non-lesson user
+            // Skip past them
+            insertPosition++;
+        } else {
+            // This is a non-protected non-lesson user - insert before them
+            break;
+        }
+    }
+    
+    console.log('Inserting', pendingQueueItem.name, 'at position', insertPosition);
+    console.log('Current queue before insertion:', queue.map(p => `${p.name}(${p.isInLesson ? 'lesson' : 'no lesson'}, bumps: ${p.bumpCount})`));
+    
+    queue.splice(insertPosition, 0, pendingQueueItem);
+    
+    // Apply bumps to non-lesson users who got pushed back (but not protected ones)
+    for (let i = insertPosition + 1; i < queue.length; i++) {
+        if (!queue[i].isInLesson && queue[i].bumpCount < 3) {
+            queue[i].bumpCount++;
+        }
+    }
+} else {
+    queue.push(pendingQueueItem);
+}
+                
+                debug('Person added to queue. Queue length: ' + queue.length);
+                
+                pendingQueueItem = null;
+                updateQueueDisplay();
+                updateTimerDisplay(); // Update to show locked status
+                clearQueueForm();
+                saveData();
+                fixInputFocus();
+                
+                // ADD THESE LINES to force the queue to show:
+                const joinTab = document.getElementById('joinTab');
+                if (joinTab && joinTab.classList.contains('active')) {
+                    document.querySelector('.queue-section').classList.add('active');
+                }
+            }
+        }
+        
+       function removeFromQueue(index) {
+    debug('Removing person at index: ' + index);
+    
+    const person = queue[index];
+    // Don't remove timer - user stays locked until timer expires or manual unlock
+    // Timer continues running independently of queue status
+    
+    queue.splice(index, 1);
+    updateQueueDisplay();
+    saveData()
+}
+        
+        function playMusic(index) {
+            debug('Playing music for index: ' + index);
+            
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+                currentlyPlayingIndex = -1;
+            }
+            
+            const person = queue[index];
+            if (!person || !person.file) {
+                showNotification('Music file not found','error');
+                return;
+            }
+            
+            debug('File info - Name: ' + person.fileName + ', Size: ' + person.file.size + ', Type: ' + person.file.type);
+            
+            const supportedFormats = ['.mp3', '.wav', '.flac', '.aac', '.ogg', '.m4a', '.wma', '.webm', '.opus', '.aiff', '.au', '.ra', '.3gp', '.amr'];
+            const fileExtension = '.' + person.fileName.toLowerCase().split('.').pop();
+            
+            if (!person.file.type.includes('audio') && !supportedFormats.includes(fileExtension)) {
+                showNotification('This file may not be a valid audio file','error');
+                return;
+            }
+            
+            const audioUrl = URL.createObjectURL(person.file);
+            const link = document.createElement('a');
+            link.href = audioUrl;
+            link.download = person.fileName;
+            link.textContent = `Download ${person.fileName}`;
+            
+            const audio = new Audio();
+            let playbackFailed = false;
+            
+            const playFallback = () => {
+                if (!playbackFailed) {
+                    playbackFailed = true;
+                    debug('Falling back to download option');
+                    
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    window.open(audioUrl, '_blank');
+                }
+            };
+            
+            audio.addEventListener('loadeddata', () => {
+                debug('Audio loaded, attempting to play...');
+                audio.play().then(() => {
+                    debug('Audio playing successfully');
+                    currentAudio = audio;
+                    currentlyPlayingIndex = index;
+                    
+                    currentlyPlaying = {
+                        name: person.name,
+                        songName: person.songName,
+                        fileName: person.fileName,
+                        isInLesson: person.isInLesson,
+                        file: person.file
+                    };
+                    
+                    if (person && !person.isInLesson) {
+                        startPracticeTimer(person.name);
+                    }
+                    
+                    setTimeout(() => {
+                        if (currentlyPlayingIndex >= 0 && queue[currentlyPlayingIndex]) {
+                            debug(`Auto-removing ${person.name} from queue - song is playing`);
+                            queue.splice(currentlyPlayingIndex, 1);
+                            currentlyPlayingIndex = -1;
+                            updateQueueDisplay();
+                        }
+                    }, 1000);
+                    
+                    updateQueueDisplay();
+                }).catch(e => {
+                    debug('Playback failed: ' + (e.message || 'Unknown error'));
+                    playFallback();
+                });
+            });
+            
+            audio.addEventListener('error', (e) => {
+                debug('Audio error occurred');
+                playFallback();
+            });
+            
+            audio.addEventListener('ended', () => {
+                debug('Audio ended');
+                
+                currentAudio = null;
+                currentlyPlayingIndex = -1;
+                if (progressUpdateInterval) {
+                    clearInterval(progressUpdateInterval);
+                    progressUpdateInterval = null;
+                }
+                updateQueueDisplay();
+                URL.revokeObjectURL(audioUrl);
+            });
+            
+            audio.addEventListener('pause', () => {
+                debug('Audio paused');
+                updateQueueDisplay();
+            });
+            
+            audio.addEventListener('loadedmetadata', () => {
+                debug('Audio metadata loaded');
+                updateQueueDisplay();
+                
+                if (progressUpdateInterval) {
+                    clearInterval(progressUpdateInterval);
+                }
+                progressUpdateInterval = setInterval(updateProgress, 1000);
+            });
+
+            audio.addEventListener('timeupdate', updateProgress);
+            
+            setTimeout(() => {
+                if (audio.readyState === 0) {
+                    debug('Audio loading timeout');
+                    playFallback();
+                }
+            }, 3000);
+            
+            audio.src = audioUrl;
+            audio.load();
+        }
+        
+        function pauseMusic() {
+            if (currentAudio && !currentAudio.paused) {
+                currentAudio.pause();
+                debug('Music paused');
+                updateQueueDisplay();
+            }
+        }
+        
+        function resumeMusic() {
+            if (currentAudio && currentAudio.paused) {
+                currentAudio.play().then(() => {
+                    debug('Music resumed');
+                    updateQueueDisplay();
+                }).catch(e => {
+                    debug('Resume failed: ' + (e.message || 'Unknown error'));
+                });
+            }
+        }
+        
+        function clearNowPlaying() {
+            currentlyPlaying = null;
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+            currentlyPlayingIndex = -1;
+            if (progressUpdateInterval) {
+                clearInterval(progressUpdateInterval);
+                progressUpdateInterval = null;
+            }
+            updateQueueDisplay();
+            debug('Now playing section cleared');
+        }
+        
+        function replayLastSong() {
+            if (!currentlyPlaying || !currentlyPlaying.file) {
+                showNotification('No song available to replay','error');
+                return;
+            }
+            
+            debug('Replaying last song: ' + currentlyPlaying.songName);
+            
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+            
+            if (progressUpdateInterval) {
+                clearInterval(progressUpdateInterval);
+                progressUpdateInterval = null;
+            }
+            
+            const audioUrl = URL.createObjectURL(currentlyPlaying.file);
+            const audio = new Audio();
+            let playbackFailed = false;
+            
+            const playFallback = () => {
+                if (!playbackFailed) {
+                    playbackFailed = true;
+                    debug('Falling back to download option for replay');
+                    
+                    const link = document.createElement('a');
+                    link.href = audioUrl;
+                    link.download = currentlyPlaying.fileName;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    window.open(audioUrl, '_blank');
+                }
+            };
+            
+            audio.addEventListener('loadeddata', () => {
+                debug('Replay audio loaded, attempting to play...');
+                audio.play().then(() => {
+                    debug('Replay audio playing successfully');
+                    currentAudio = audio;
+                    
+                    if (progressUpdateInterval) {
+                        clearInterval(progressUpdateInterval);
+                    }
+                    progressUpdateInterval = setInterval(updateProgress, 1000);
+                    
+                    updateQueueDisplay();
+                }).catch(e => {
+                    debug('Replay playback failed: ' + (e.message || 'Unknown error'));
+                    playFallback();
+                });
+            });
+            
+            audio.addEventListener('error', (e) => {
+                debug('Replay audio error occurred');
+                playFallback();
+            });
+            
+            audio.addEventListener('ended', () => {
+                debug('Replay audio ended');
+                currentAudio = null;
+                if (progressUpdateInterval) {
+                    clearInterval(progressUpdateInterval);
+                    progressUpdateInterval = null;
+                }
+                updateQueueDisplay();
+                URL.revokeObjectURL(audioUrl);
+            });
+            
+            audio.addEventListener('pause', () => {
+                debug('Replay audio paused');
+                updateQueueDisplay();
+            });
+            
+            audio.addEventListener('loadedmetadata', () => {
+                debug('Replay audio metadata loaded');
+                updateQueueDisplay();
+            });
+
+            audio.addEventListener('timeupdate', updateProgress);
+            
+            setTimeout(() => {
+                if (audio.readyState === 0) {
+                    debug('Replay audio loading timeout');
+                    playFallback();
+                }
+            }, 3000);
+            
+            audio.src = audioUrl;
+            audio.load();
+        }
+        
+        function updateQueueDisplay() {
+            debug('Updating queue display...');
+            
+            const queueList = document.getElementById('queueList');
+            const queueCount = document.getElementById('queueCount');
+            
+            if (queueCount) {
+                queueCount.textContent = `${queue.length} in queue`;
+            }
+            
+            if (!queueList) {
+                debug('ERROR: Queue list element not found');
+                return;
+            }
+            
+            if (queue.length === 0 && !currentlyPlaying) {
+                queueList.innerHTML = '<li class="empty-queue">No one in queue yet. Add someone to get started!</li>';
+                return;
+            }
+            
+            let queueHTML = '';
+            
+            if (currentlyPlaying) {
+                let playButton = '';
+                let statusText = '';
+                let controlsSection = '';
+                let titleText = '';
+                
+                // Add dance song indicator for currently playing
+                const danceIndicator = currentlyPlaying.isDanceSong ? ' ⛸️' : '';
+                const danceLabel = currentlyPlaying.isDanceSong ? ' • Dance Song' : '';
+                
+                if (currentAudio && !currentAudio.ended) {
+                    titleText = 'NOW PLAYING';
+                    if (!currentAudio.paused) {
+                        playButton = `<button class="play-btn" onclick="pauseMusic()">⏸ Pause</button>`;
+                        statusText = ' • Playing';
+                    } else {
+                        playButton = `<button class="play-btn" onclick="resumeMusic()">▶ Resume</button>`;
+                        statusText = ' • Paused';
+                    }
+                    
+                    controlsSection = `
+                        <div class="audio-controls">
+                            <div class="progress-container">
+                                <span class="time-display" id="currentTime">0:00</span>
+                                <input type="range" 
+                                    class="progress-slider" 
+                                    id="progressSlider"
+                                    min="0" 
+                                    max="100" 
+                                    value="0"
+                                    onmousedown="isDragging = true"
+                                    onmouseup="isDragging = false; seekTo(this.value)"
+                                    ontouchstart="isDragging = true"
+                                    ontouchend="isDragging = false; seekTo(this.value)">
+                                <span class="time-display" id="totalTime">${currentAudio.duration ? formatTime(currentAudio.duration) : '0:00'}</span>
+                            </div>
+                            <div class="volume-container">
+                                <span style="font-size: 0.8em;">🔊</span>
+                                <input type="range" 
+                                    class="volume-slider" 
+                                    min="0" 
+                                    max="100" 
+                                    value="100"
+                                    onchange="setVolume(this.value)">
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    titleText = 'LAST PLAYED';
+                    statusText = ' • Finished';
+                    playButton = `<button class="play-btn" onclick="replayLastSong()">🔄 Replay</button>`;
+                    controlsSection = '';
+                }
+                
+                queueHTML += `
+                    <li class="queue-item" style="border-color: #4CAF50; background: linear-gradient(135deg, #f0fff4 0%, #e8f5e8 100%);">
+                        <div class="queue-item-info">
+                            <div class="queue-item-name">
+                                ${currentlyPlaying.name}${danceIndicator} 🎵 ${titleText}
+                            </div>
+                            <div class="queue-item-details">
+                                ${currentlyPlaying.songName} (${currentlyPlaying.fileName})
+                                ${currentlyPlaying.isInLesson ? ' • In Lesson' : ''}
+                                ${danceLabel}
+                                ${statusText}
+                            </div>
+                            ${controlsSection}
+                        </div>
+                        <div class="queue-item-actions">
+                            ${playButton}
+                            <button class="remove-btn" onclick="clearNowPlaying()">
+                                ✕ Clear
+                            </button>
+                        </div>
+                    </li>
+                `;
+            }
+            
+            if (queue.length === 0) {
+                if (!currentlyPlaying) {
+                    queueHTML += '<li class="empty-queue">No one in queue yet. Add someone to get started!</li>';
+                } else {
+                    queueHTML += '<li class="empty-queue">Queue is empty. Add more users!</li>';
+                }
+            } else {
+                queueHTML += queue.map((person, index) => {
+                    let itemClass = 'queue-item';
+                    if (person.isInLesson) {
+                        itemClass += ' lesson-priority';
+                    } else if (person.bumpCount > 0) {
+                        itemClass += ' bumped';
+                    }
+                    
+                    // Add dance song styling
+                    if (person.isDanceSong) {
+                        itemClass += ' dance-song';
+                    }
+                    
+                    const playButton = `<button class="play-btn" onclick="playMusic(${index})">▶ Play</button>`;
+                    
+                    // Dance song indicators
+                    const danceIndicator = person.isDanceSong ? ' ⛸️' : '';
+                    const danceLabel = person.isDanceSong ? ' • Dance Song' : '';
+                    
+                    return `
+                        <li class="${itemClass}">
+                            <div class="queue-item-info">
+                                <div class="queue-item-name">
+                                    ${person.name}${danceIndicator}
+                                    ${person.bumpCount > 0 ? `<span class="bump-count">Bumped ${person.bumpCount}x</span>` : ''}
+                                </div>
+                                <div class="queue-item-details">
+                                    ${person.songName} (${person.fileName}) • Position: ${index + 1}
+                                    ${person.isInLesson ? ' • In Lesson' : ''}${danceLabel}
+                                </div>
+                            </div>
+                            <div class="queue-item-actions">
+                                ${playButton}
+                                <button class="remove-btn" onclick="removeFromQueue(${index})">
+                                    ✕ Remove
+                                </button>
+                            </div>
+                        </li>
+                    `;
+                }).join('');
+            }
+            
+            queueList.innerHTML = queueHTML;
+            
+            debug('Queue display updated with ' + queue.length + ' items');
+        }
+        
+        function clearQueueForm() {
+            debug('Clearing queue form...');
+            
+            const userSelect = document.getElementById('userSelect');
+            const songSelect = document.getElementById('songSelect');
+            
+            if (userSelect) userSelect.value = '';
+            if (songSelect) {
+                songSelect.innerHTML = '<option value="">Select user first...</option>';
+                songSelect.disabled = true;
+            }
+            if (danceSelect) {
+                danceSelect.value = '';
+            }
+        }
+    </script>
+</body>
+</html>
