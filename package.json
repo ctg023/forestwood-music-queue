@@ -18,8 +18,8 @@
     "electron": "^27.0.0",
     "electron-builder": "^24.6.4"
   },
- "build": {
-  "appId": "com.icerink.musicqueue",
+"build": {
+  "appId": "com.icerink.musicqueue", 
   "productName": "Music Queue Manager",
   "directories": {
     "output": "dist"
@@ -30,9 +30,10 @@
     "verifyUpdateCodeSignature": false
   },
   "mac": {
-    "target": "dmg",
+    "target": "zip",
     "gatekeeperAssess": false,
-    "hardenedRuntime": false
+    "hardenedRuntime": false,
+    "type": "distribution"
   },
   "linux": {
     "target": "AppImage"
