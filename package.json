@@ -18,26 +18,30 @@
     "electron": "^27.0.0",
     "electron-builder": "^24.6.4"
   },
-  "build": {
-    "appId": "com.icerink.musicqueue",
-    "productName": "Music Queue Manager",
-    "directories": {
-      "output": "dist"
-    },
-    "win": {
-      "target": "nsis"
-    },
-    "mac": {
-      "target": "dmg"
-    },
-    "linux": {
-      "target": "AppImage"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
-    }
+ "build": {
+  "appId": "com.icerink.musicqueue",
+  "productName": "Music Queue Manager",
+  "directories": {
+    "output": "dist"
+  },
+  "win": {
+    "target": "nsis",
+    "publisherName": "Ice Rink Management",
+    "verifyUpdateCodeSignature": false
+  },
+  "mac": {
+    "target": "dmg",
+    "gatekeeperAssess": false,
+    "hardenedRuntime": false
+  },
+  "linux": {
+    "target": "AppImage"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true
   }
+}
 }
