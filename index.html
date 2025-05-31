@@ -2750,6 +2750,24 @@ if (isInLesson) {
                 danceSelect.value = '';
             }
         }
+
+        // hit enter on keyboard, password dialog
+           document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && e.target.type === 'password') {
+                                       
+                    // Look for button in the same container as the password field
+                    const passwordContainer = e.target.closest('div, form, .modal, .dialog');
+                    const button = passwordContainer ? 
+                                passwordContainer.querySelector('button') : 
+                                e.target.nextElementSibling;
+                                   
+                    if (button && button.onclick) {
+                        button.click();
+                    }
+                }
+            });
+        // end hit enter
+
     </script>
 </body>
 </html>
