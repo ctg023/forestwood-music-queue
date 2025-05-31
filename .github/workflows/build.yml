@@ -1,9 +1,13 @@
-name: Build Mac App
+name: Build All Platforms
 on: [push]
 
 jobs:
   build:
-    runs-on: macos-latest
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
@@ -13,20 +17,26 @@ jobs:
     - name: Install dependencies
       run: npm install
     
-    - name: Build Mac app
+    - name: Build for Windows
+      if: matrix.os == 'windows-latest'
+      run: npm run build-win
+      continue-on-error: true
+    
+    - name: Build for Mac
+      if: matrix.os == 'macos-latest'
       run: npm run build-mac
       continue-on-error: true
     
-    - name: List built files
-      run: |
-        echo "Contents of dist folder:"
-        ls -la dist/ || echo "No dist folder"
-        find . -name "*.dmg" || echo "No .dmg files found"
+    - name: Upload Windows artifacts
+      if: matrix.os == 'windows-latest'
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-installer
+        path: dist/*.exe
     
-    - name: Upload artifacts
+    - name: Upload Mac artifacts
+      if: matrix.os == 'macos-latest'
       uses: actions/upload-artifact@v4
       with:
         name: mac-installer
-        path: |
-          dist/*.dmg
-          dist/**/*.dmg
+        path: dist/*.dmg
